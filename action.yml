@@ -38,7 +38,7 @@ runs:
       uses: gradle/wrapper-validation-action@v1.0.5
 
     - name: Validate commit message and determine increment
-      run: "${{ github.action_path }}scripts/validateCommit.sh '${{ inputs.commit_message }}'"
+      run: "${{ github.action_path }}/scripts/validateCommit.sh '${{ inputs.commit_message }}'"
       shell: bash
 
     - name: Run nextSemVer task
