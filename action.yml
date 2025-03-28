@@ -74,4 +74,4 @@ runs:
       run: |
         chmod +x ./gradlew
         ./gradlew -b scripts/versioning.gradle nextSnapshot
-        shell: bash
+      shell: bash
