@@ -1,48 +1,46 @@
-// versioning.gradle
+gradle.projectsEvaluated {
+    tasks.register("nextSemVerTag") {
+        group = 'Versioning - Github Actions Only'
+        description = "Sets the version based on commit message type"
 
-// Task: nextSemVerTag
-task nextSemVerTag {
-    group = 'Versioning - Github Actions Only'
-    description = "Sets the version by checking for a nextSemVerTag Flag -PincrementType='commit type'"
+        doLast {
+            def v = buildFile.getText().find(version)
+            def (baseVersion, snapshot) = v.tokenize('-')
+            def (major, minor, patch) = baseVersion.tokenize('.')
 
-    doLast {
-        def v = buildFile.getText().find(version)
-        def (baseVersion, snapshot) = v.tokenize('-')
-        def (major, minor, patch) = baseVersion.tokenize('.')
+            if (project.hasProperty('incrementType')) {
+                def incrementType = incrementType.toLowerCase()
+                def newVersion
 
-        if (project.hasProperty('incrementType')) {
-            def incrementType = incrementType.toLowerCase()
-            def newVersion
+                if (incrementType.contains('breakingchange')) {
+                    newVersion = "${major.toInteger() + 1}.0.0"
+                } else if (incrementType.contains('feat')) {
+                    newVersion = "${major}.${minor.toInteger() + 1}.0"
+                } else {
+                    newVersion = "${major}.${minor}.${patch}"
+                }
 
-            if (incrementType.contains('breakingchange')) {
-                newVersion = (Integer.parseInt(major) + 1) + ".0.0"
-            } else if (incrementType.contains('feat')) {
-                newVersion = major + "." + (Integer.parseInt(minor) + 1) + ".0"
-            } else {
-                newVersion = major + "." + minor + "." + (Integer.parseInt(patch) + 1)
+                def updated = buildFile.text.replaceFirst("version = '${version}'", "version = '${newVersion}'")
+                buildFile.text = updated
+                println "🔖 New version: ${newVersion}"
             }
-
-            String updated = buildFile.getText().replaceFirst("version = '"+version.toString()+"'",
-                    "version = '" + newVersion + "'")
-            buildFile.setText(updated)
-            println newVersion
         }
     }
-}
 
-// Task: nextSnapshot
-task nextSnapshot {
-    group = 'Versioning - Github Actions Only'
-    description = "Adds +1 to patch and appends '-SNAPSHOT'"
+    tasks.register("nextSnapshot") {
+        group = 'Versioning - Github Actions Only'
+        description = "Increments patch version and appends -SNAPSHOT"
 
-    doLast {
-        def v = buildFile.getText().find(version)
-        def (baseVersion, snapshot) = v.tokenize('-')
-        def (major, minor, patch) = baseVersion.tokenize('.')
-        def newPatch = Integer.parseInt(patch) + 1
-        def newVersion = "${major}.${minor}.${newPatch}-SNAPSHOT"
-        String updated = buildFile.getText().replaceFirst("version = '${v.toString()}'", "version = '${newVersion}'")
-        buildFile.setText(updated)
-        println newVersion
+        doLast {
+            def v = buildFile.getText().find(version)
+            def (baseVersion, snapshot) = v.tokenize('-')
+            def (major, minor, patch) = baseVersion.tokenize('.')
+            def newPatch = patch.toInteger() + 1
+            def newVersion = "${major}.${minor}.${newPatch}-SNAPSHOT"
+
+            def updated = buildFile.text.replaceFirst("version = '${v}'", "version = '${newVersion}'")
+            buildFile.text = updated
+            println "🔧 Bumped to next snapshot version: ${newVersion}"
+        }
     }
 }
