@@ -27,8 +27,6 @@ runs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.SSH_KEY_GITHUB }}
 
     - name: Set up Java
       uses: actions/setup-java@v3
@@ -41,34 +39,39 @@ runs:
 
     - name: Validate commit message and determine increment
       run: scripts/validateCommit.sh "${{ inputs.commit_message }}"
+      shell: bash
 
     - name: Run nextSemVer task
       run: |
         chmod +x ./gradlew
         ./gradlew -b scripts/versioning.gradle nextSemVerTag -PincrementType="${{ env.increment_type }}"
+      shell: bash
 
     - name: Read version from build.gradle
       id: get_version
       run: |
         echo "VERSION=$(grep -w "version = " "./build.gradle" | head -n 1 | cut -d "'" -f 2)" >> $GITHUB_OUTPUT
+      shell: bash
 
     - name: Print dry-run notice
       if: ${{ inputs.dry_run == 'true' }}
       run:
         echo "🧪 Dry run mode: no tag will be created or published."
+      shell: bash
 
     - name: Create and push tag
       if: ${{ inputs.dry_run != 'true' }}
       run: scripts/createTag.sh "${{ steps.get_version.outputs.VERSION }}" "${{ inputs.commit_message }}" "${{ inputs.tag_prefix }}" "${{ inputs.dry_run }}"
+      shell: bash
 
     - name: Publish to Artifactory
       if: ${{ inputs.dry_run != 'true' }}
-      env:
-        API_KEY: ${{ secrets.ARTIFACTORY_API_KEY }}
       run: scripts/publishToArtifactory.sh
+      shell: bash
 
     - name: Prepare next snapshot version
       if: ${{ inputs.dry_run != 'true' }}
       run: |
         chmod +x ./gradlew
         ./gradlew -b scripts/versioning.gradle nextSnapshot
+        shell: bash
