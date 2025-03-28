@@ -38,7 +38,7 @@ runs:
       uses: gradle/wrapper-validation-action@v1.0.5
 
     - name: Validate commit message and determine increment
-      run: scripts/validateCommit.sh "${{ inputs.commit_message }}"
+      run: "${{ github.action_path }}scripts/validateCommit.sh '${{ inputs.commit_message }}'"
       shell: bash
 
     - name: Run nextSemVer task
@@ -61,12 +61,12 @@ runs:
 
     - name: Create and push tag
       if: ${{ inputs.dry_run != 'true' }}
-      run: scripts/createTag.sh "${{ steps.get_version.outputs.VERSION }}" "${{ inputs.commit_message }}" "${{ inputs.tag_prefix }}" "${{ inputs.dry_run }}"
+      run: "${{ github.action_path }}/scripts/createTag.sh '${{ steps.get_version.outputs.VERSION }}' '${{ inputs.commit_message }}' '${{ inputs.tag_prefix }}' '${{ inputs.dry_run }}'"
       shell: bash
 
     - name: Publish to Artifactory
       if: ${{ inputs.dry_run != 'true' }}
-      run: scripts/publishToArtifactory.sh
+      run: "${{ github.action_path }}/scripts/publishToArtifactory.sh"
       shell: bash
 
     - name: Prepare next snapshot version
