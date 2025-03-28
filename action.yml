@@ -44,7 +44,7 @@ runs:
     - name: Run nextSemVer task
       run: |
         chmod +x ./gradlew
-        ./gradlew -b ${{ github.action_path }}/scripts/versioning.gradle nextSemVerTag -PincrementType="${{ env.increment_type }}"
+        ./gradlew --init-script ${{ github.action_path }}/scripts/versioning.gradle nextSemVerTag -PincrementType="${{ env.increment_type }}"
       shell: bash
 
     - name: Read version from build.gradle
@@ -73,5 +73,5 @@ runs:
       if: ${{ inputs.dry_run != 'true' }}
       run: |
         chmod +x ./gradlew
-        ./gradlew -b ${{ github.action_path }}/scripts/versioning.gradle nextSnapshot
+        ./gradlew --init-script ${{ github.action_path }}/scripts/versioning.gradle nextSnapshot
       shell: bash
