@@ -56,7 +56,7 @@ runs:
     - name: Print dry-run notice
       if: ${{ inputs.dry_run == 'true' }}
       run: |
-        echo "🧪 Dry run mode: no tag will be created or published."
+        echo "Dry run mode: no tag will be created or published."
       shell: bash
 
     - name: Create and push tag
