@@ -1,0 +1,74 @@
+name: "Auto Tag and Release"
+description: "Automatically tags and releases a Java/Gradle project based on conventional commits"
+
+inputs:
+  java_version:
+    type: "choice"
+    description: "Java version to use (8 or 11)"
+    options:
+      - "8"
+      - "11"
+      - "17"
+    required: false
+    default: "8"
+  commit_message:
+    description: "The commit message from the latest commit"
+    required: true
+  tag_prefix:
+    description: "Prefix for the Git tag (e.g., my-library-name)"
+    required: true
+  dry_run:
+    description: "If true, skip tagging and publishing steps"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.SSH_KEY_GITHUB }}
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ inputs.java_version }}
+        distribution: 'adopt'
+
+    - name: Validate Gradle wrapper
+      uses: gradle/wrapper-validation-action@v1.0.5
+
+    - name: Validate commit message and determine increment
+      run: scripts/validateCommit.sh "${{ inputs.commit_message }}"
+
+    - name: Run nextSemVer task
+      run: |
+        chmod +x ./gradlew
+        ./gradlew -b scripts/versioning.gradle nextSemVerTag -PincrementType="${{ env.increment_type }}"
+
+    - name: Read version from build.gradle
+      id: get_version
+      run: |
+        echo "VERSION=$(grep -w "version = " "./build.gradle" | head -n 1 | cut -d "'" -f 2)" >> $GITHUB_OUTPUT
+
+    - name: Print dry-run notice
+      if: ${{ inputs.dry_run == 'true' }}
+      run:
+        echo "🧪 Dry run mode: no tag will be created or published."
+
+    - name: Create and push tag
+      if: ${{ inputs.dry_run != 'true' }}
+      run: scripts/createTag.sh "${{ steps.get_version.outputs.VERSION }}" "${{ inputs.commit_message }}" "${{ inputs.tag_prefix }}" "${{ inputs.dry_run }}"
+
+    - name: Publish to Artifactory
+      if: ${{ inputs.dry_run != 'true' }}
+      env:
+        API_KEY: ${{ secrets.ARTIFACTORY_API_KEY }}
+      run: scripts/publishToArtifactory.sh
+
+    - name: Prepare next snapshot version
+      if: ${{ inputs.dry_run != 'true' }}
+      run: |
+        chmod +x ./gradlew
+        ./gradlew -b scripts/versioning.gradle nextSnapshot
