@@ -1,46 +1,49 @@
-gradle.projectsEvaluated {
-    tasks.register("nextSemVerTag") {
-        group = 'Versioning - Github Actions Only'
-        description = "Sets the version based on commit message type"
+allprojects {
+    afterEvaluate { project ->
 
-        doLast {
-            def v = buildFile.getText().find(version)
-            def (baseVersion, snapshot) = v.tokenize('-')
-            def (major, minor, patch) = baseVersion.tokenize('.')
+        project.tasks.register("nextSemVerTag") {
+            group = 'Versioning - GitHub Actions Only'
+            description = "Sets the version based on commit message type"
 
-            if (project.hasProperty('incrementType')) {
-                def incrementType = incrementType.toLowerCase()
-                def newVersion
+            doLast {
+                def v = project.buildFile.getText().find(project.version)
+                def (baseVersion, snapshot) = v.tokenize('-')
+                def (major, minor, patch) = baseVersion.tokenize('.')
 
-                if (incrementType.contains('breakingchange')) {
-                    newVersion = "${major.toInteger() + 1}.0.0"
-                } else if (incrementType.contains('feat')) {
-                    newVersion = "${major}.${minor.toInteger() + 1}.0"
-                } else {
-                    newVersion = "${major}.${minor}.${patch}"
+                if (project.hasProperty('incrementType')) {
+                    def incrementType = incrementType.toLowerCase()
+                    def newVersion
+
+                    if (incrementType.contains('breakingchange')) {
+                        newVersion = "${major.toInteger() + 1}.0.0"
+                    } else if (incrementType.contains('feat')) {
+                        newVersion = "${major}.${minor.toInteger() + 1}.0"
+                    } else {
+                        newVersion = "${major}.${minor}.${patch}"
+                    }
+
+                    def updated = project.buildFile.text.replaceFirst("version = '${project.version}'", "version = '${newVersion}'")
+                    project.buildFile.text = updated
+                    println "🔖 New version: ${newVersion}"
                 }
-
-                def updated = buildFile.text.replaceFirst("version = '${version}'", "version = '${newVersion}'")
-                buildFile.text = updated
-                println "🔖 New version: ${newVersion}"
             }
         }
-    }
 
-    tasks.register("nextSnapshot") {
-        group = 'Versioning - Github Actions Only'
-        description = "Increments patch version and appends -SNAPSHOT"
+        project.tasks.register("nextSnapshot") {
+            group = 'Versioning - GitHub Actions Only'
+            description = "Increments patch version and appends -SNAPSHOT"
 
-        doLast {
-            def v = buildFile.getText().find(version)
-            def (baseVersion, snapshot) = v.tokenize('-')
-            def (major, minor, patch) = baseVersion.tokenize('.')
-            def newPatch = patch.toInteger() + 1
-            def newVersion = "${major}.${minor}.${newPatch}-SNAPSHOT"
+            doLast {
+                def v = project.buildFile.getText().find(project.version)
+                def (baseVersion, snapshot) = v.tokenize('-')
+                def (major, minor, patch) = baseVersion.tokenize('.')
+                def newPatch = patch.toInteger() + 1
+                def newVersion = "${major}.${minor}.${newPatch}-SNAPSHOT"
 
-            def updated = buildFile.text.replaceFirst("version = '${v}'", "version = '${newVersion}'")
-            buildFile.text = updated
-            println "🔧 Bumped to next snapshot version: ${newVersion}"
+                def updated = project.buildFile.text.replaceFirst("version = '${v}'", "version = '${newVersion}'")
+                project.buildFile.text = updated
+                println "🔧 Bumped to next snapshot version: ${newVersion}"
+            }
         }
     }
 }
