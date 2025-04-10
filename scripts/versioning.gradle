@@ -24,7 +24,7 @@ allprojects {
 
                     def updated = project.buildFile.text.replaceFirst("version = '${project.version}'", "version = '${newVersion}'")
                     project.buildFile.text = updated
-                    println "🔖 New version: ${newVersion}"
+                    println "New version: ${newVersion}"
                 }
             }
         }
@@ -42,7 +42,7 @@ allprojects {
 
                 def updated = project.buildFile.text.replaceFirst("version = '${v}'", "version = '${newVersion}'")
                 project.buildFile.text = updated
-                println "🔧 Bumped to next snapshot version: ${newVersion}"
+                println "Bumped to next snapshot version: ${newVersion}"
             }
         }
     }
