@@ -75,3 +75,8 @@ runs:
         chmod +x ./gradlew
         ./gradlew --init-script ${{ github.action_path }}/scripts/versioning.gradle nextSnapshot
       shell: bash
+
+    - name: Commit next snapshot version
+      if: ${{ inputs.dry_run != 'true' }}
+      run: "${{ github.action_path }}/scripts/commitNextSnapshot.sh"
+      shell: bash
