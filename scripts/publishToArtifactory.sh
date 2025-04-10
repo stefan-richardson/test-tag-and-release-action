@@ -2,6 +2,5 @@
 set -e
 
 chmod +x gradlew
-./gradlew addCredentials --key artifactoryUsername --value github-actions
-./gradlew addCredentials --key artifactoryApiKey --value "$API_KEY"
+./gradlew addCredentials -PartifactoryUsername=github-actions -PartifactoryApiKey="$API_KEY"
 ./gradlew artifactoryPublish
