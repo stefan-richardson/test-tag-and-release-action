@@ -41,12 +41,6 @@ runs:
       run: "${{ github.action_path }}/scripts/validateCommit.sh '${{ inputs.commit_message }}'"
       shell: bash
 
-    - name: Run nextSemVer task
-      run: |
-        chmod +x ./gradlew
-        ./gradlew --init-script ${{ github.action_path }}/scripts/versioning.gradle nextSemVerTag -PincrementType="${{ env.increment_type }}"
-      shell: bash
-
     - name: Read version from build.gradle
       id: get_version
       run: |
@@ -69,6 +63,12 @@ runs:
       run: "${{ github.action_path }}/scripts/publishToArtifactory.sh"
       shell: bash
 
+    - name: Run nextSemVer task
+      run: |
+        chmod +x ./gradlew
+        ./gradlew --init-script ${{ github.action_path }}/scripts/versioning.gradle nextSemVerTag -PincrementType="${{ env.increment_type }}"
+      shell: bash
+
     - name: Prepare next snapshot version
       if: ${{ inputs.dry_run != 'true' }}
       run: |
@@ -78,5 +78,7 @@ runs:
 
     - name: Commit next snapshot version
       if: ${{ inputs.dry_run != 'true' }}
-      run: "${{ github.action_path }}/scripts/commitNextSnapshot.sh"
+      run: |
+        chmod +x scripts/commitNextSnapshot.sh
+        ${{ github.action_path }}/scripts/commitNextSnapshot.sh
       shell: bash
